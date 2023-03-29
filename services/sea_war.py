@@ -61,9 +61,9 @@ def create_map():
     return sea_map
 
 
-def check_hit(map, x, y):
-    if map[y][x]:
-        if map[y - 1][x] or map[y + 1][x] or map[y][x - 1] or map[y][x + 1]:
+def check_hit(sea_map, x, y):
+    if sea_map[y][x]:
+        if sea_map[y - 1][x] or sea_map[y + 1][x] or sea_map[y][x - 1] or sea_map[y][x + 1]:
             return "hit"
         else:
             return "killed"
