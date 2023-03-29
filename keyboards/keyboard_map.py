@@ -33,15 +33,15 @@ def rebuild_keyboard(old_board, x, y, status):
     if status == "miss":
         keyboard[y][x] = InlineKeyboardButton(
             text='🌊',
-            callback_data=f'{x},{y}')
+            callback_data=f'{y},{x}')
     elif status == "hit":
         keyboard[y][x] = InlineKeyboardButton(
             text='💥',
-            callback_data=f'{x},{y}')
+            callback_data=f'{y},{x}')
     elif status == "killed":
         keyboard[y][x] = InlineKeyboardButton(
             text='💥',
-            callback_data=f'{x},{y}')
+            callback_data=f'{y},{x}')
     rebuilt_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=keyboard,
                                                                   resize_keyboard=True)
     return rebuilt_keyboard
