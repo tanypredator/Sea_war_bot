@@ -5,12 +5,12 @@ from aiogram.types import Message, CallbackQuery
 from keyboards.keyboard import yes_no_kb
 from keyboards.keyboard_map import game_kb, rebuild_keyboard
 from lexicon.lexicon_ru import LEXICON_RU
-from services.sea_war import create_map, check_hit
+from services.sea_war import create_map, shot_result
 from User_dict.user_dict import users
 
 router: Router = Router()
-ATTEMPTS: int = 20
-SHIPS_LEFT = 13
+ATTEMPTS: int = 40
+SHIPS_LEFT: int = 7
 
 # Этот хэндлер срабатывает на команду /start
 @router.message(CommandStart())
@@ -21,6 +21,7 @@ async def process_start_command(message: Message):
                                        'sea_map': None,
                                        'attempts': None,
                                        'ships_left': None,
+                                       'hits': None,
                                        'total_games': 0,
                                        'wins': 0}
 
@@ -59,6 +60,7 @@ async def process_yes_answer(message: Message):
     if not users[message.from_user.id]['in_game']:
         users[message.from_user.id]['in_game'] = True
         users[message.from_user.id]['sea_map'] = create_map()
+        users[message.from_user.id]['hits'] = []
         users[message.from_user.id]['attempts'] = ATTEMPTS
         users[message.from_user.id]['ships_left'] = SHIPS_LEFT
     else:
@@ -79,22 +81,23 @@ async def process_game_button(callback: CallbackQuery):
     coords = callback.data.split(',')
     coord_y = int(coords[0]) - 1
     coord_x = int(coords[1]) - 1
-    result = check_hit(users[callback.from_user.id]['sea_map'], coord_x, coord_y)
     users[callback.from_user.id]['attempts'] -= 1
-    if result == 'hit' or result == 'killed':
-        users[callback.from_user.id]['ships_left'] -= 1
+    play_map = users[callback.from_user.id]['sea_map']
+    hits = users[callback.from_user.id]['hits']
+    result = shot_result(play_map, hits, coord_x, coord_y)
+    if result == 'killed':
+    	users[callback.from_user.id]['ships_left'] -= 1
     if users[callback.from_user.id]['ships_left'] == 0:
         await callback.message.edit_text(
         text=LEXICON_RU['user_won'],
         reply_markup=None)
         await callback.message.answer(text=LEXICON_RU['new_game'], reply_markup=yes_no_kb)
-    if users[callback.from_user.id]['attempts'] == 0:
-        await callback.message.edit_text(
+    elif users[callback.from_user.id]['attempts'] == 0:
+       await callback.message.edit_text(
         text=LEXICON_RU['user_failed'],
        reply_markup=None)
-        await callback.message.answer(text=LEXICON_RU['new_game'], reply_markup=yes_no_kb)
+       await callback.message.answer(text=LEXICON_RU['new_game'], reply_markup=yes_no_kb)
     else:
         await callback.message.edit_text(
-        text=LEXICON_RU[result],
-        reply_markup=rebuild_keyboard(callback.message.reply_markup.inline_keyboard, coord_x, coord_y, result))
+        text=LEXICON_RU[result], reply_markup=rebuild_keyboard(callback.message.reply_markup.inline_keyboard, coord_x, coord_y, result))
     await callback.answer(text = f"{LEXICON_RU['shots left']} = {users[callback.from_user.id]['attempts']}")
