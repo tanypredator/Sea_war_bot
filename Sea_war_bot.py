@@ -2,7 +2,7 @@ import asyncio
 
 from aiogram import Bot, Dispatcher
 
-from handlers import other_handlers, user_handlers
+from handlers import other_handlers, user_handlers, one_sided_handlers, pair_AI_handlers
 
 
 BOT_TOKEN: str
@@ -17,6 +17,8 @@ async def main():
 
     # Регистрируем роутеры в диспетчере
     dp.include_router(user_handlers.router)
+    dp.include_router(one_sided_handlers.router)
+    dp.include_router(pair_AI_handlers.router)
     dp.include_router(other_handlers.router)
 
     # Запускаем polling
