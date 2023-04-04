@@ -3,13 +3,13 @@ from random import randint
 
 def _check_tile(y: int, x: int, map: list[list]):
 	# check the tile and its adjacent tiles
-	check = map[y][x] == 0 and map[y-1][x] == 0 and map[y+1][x] == 0 and map[y][x-1] == 0 and map[y][x+1] == 0
+	check = map[y][x] + map[y-1][x] + map[y+1][x] + map[y][x-1] + map[y][x+1] + map[y-1][x-1] + map[y-1][x+1] + map[y+1][x-1] + map[y+1][x+1]
 	return check
 
 
 def check_ship(length: int, orient: list, head_y: int, head_x: int, map: list[list]):
 	# check if the tile isn't already occupied
-	if _check_tile(head_y, head_x, map):
+	if not _check_tile(head_y, head_x, map):
 		check = True
 		# check if the ship will fit in the map
 		tail_y = head_y + orient[0]*(length-1)
@@ -23,7 +23,7 @@ def check_ship(length: int, orient: list, head_y: int, head_x: int, map: list[li
 				head_check_x = head_x
 				head_check_y += orient[0]
 				head_check_x += orient[1]
-				if not _check_tile(head_check_y, head_check_x, map):
+				if _check_tile(head_check_y, head_check_x, map):
 					check = False
 			return check
 
@@ -52,13 +52,13 @@ def create_map():
 				# add the ship and its coords to the dict of ships placed on map:
 				ship_name = str(length) + f'_{count}'
 				ships_in_game[ship_name] = []
-				ships_in_game[ship_name].append([head_y-1, head_x-1])
+				ships_in_game[ship_name].append([head_y, head_x])
 				sea_map[head_y][head_x] = 1
 				for deck in range(1, length):
 					head_y += orient[0]
 					head_x += orient[1]
 					sea_map[head_y][head_x] = 1
-					ships_in_game[ship_name].append([head_y-1, head_x-1])
+					ships_in_game[ship_name].append([head_y, head_x])
 		count += 1
 	
 	for i in range(3):
@@ -66,28 +66,106 @@ def create_map():
 		check_poi = False
 		while not check_poi:
 			poi_x, poi_y = randint(1, 8), randint(1, 8)
-			if _check_tile(poi_y, poi_x, sea_map):
+			if not _check_tile(poi_y, poi_x, sea_map):
 				check_poi = True
 				sea_map[poi_y][poi_x] = poi
-	
-	sea_map.pop()
-	sea_map.pop(0)
-	for i in sea_map:
-		i.pop()
-		i.pop(0)
 	
 	return (sea_map, ships_in_game)
 
 
+def player_map():
+	# create an empty game map
+	sea_map = []
+	for i in range(10):
+		sea_map.append([0]*10)
+	return (sea_map)
+
+
+def player_ship_placement(player_ships: dict, player_map: list[list]):
+	ships_count = 7
+	# check each tile of player map with ships placed
+	for y in range(1, 9):
+		for x in range(1, 9):
+			# once a tile with ship found:
+			if player_map[y][x] == 1:
+				n = player_map[y-1][x]
+				e = player_map[y][x+1]
+				s = player_map[y+1][x]
+				w = player_map[y][x-1]
+				ne = player_map[y-1][x+1]
+				se = player_map[y+1][x+1]
+				sw = player_map[y+1][x-1]
+				nw = player_map[y-1][x-1]
+				# if 2 or more adjacent tiles are occupied,
+				# it can be valid if they are all in vertical or horizontal line
+				if _check_tile(y, x, player_map) > 2:
+					if (n+s)>1:
+						# find, which ship already placed is near the tile
+						check = False
+						for ship in player_ships:
+							# check that it is not already too long
+							if [y-1, x] in player_ships[ship] and len(player_ships[ship]) < 2:
+								# if it isn't too long, add the tile to the ship
+								player_ships[ship].append([y, x])
+								check = True
+						if not check:
+							return ("ship too long", player_ships)
+					elif (e+w)>1:
+						check = False
+						for ship in player_ships:
+							if [y, x-1] in player_ships[ship] and len(player_ships[ship]) < 2:
+								player_ships[ship].append([y, x])
+								check = True
+						if not check:
+							return ("ship too long", player_ships)
+				# if only one adjacent tile is occupied
+				# it can be valid if it is not in diagonal
+				elif _check_tile(y, x, player_map) == 2:
+					if (ne+se+sw+nw)>0:
+						return ("diagonal placement", player_ships)
+					else:
+						# if the tile occupied is up or left to the current tile,
+						# it must be already in the dictionary of ships
+						if n == 1:
+							check = False
+							for ship in player_ships:
+								if [y-1, x] in player_ships[ship] and len(player_ships[ship]) < 3:
+									player_ships[ship].append([y, x])
+									check = True
+							if not check:
+								return ("ship too long", player_ships) 
+						elif w == 1:
+							check = False
+							for ship in player_ships:
+								if [y, x-1] in player_ships[ship] and len(player_ships[ship]) < 3:
+									player_ships[ship].append([y, x])
+									check = True
+							if not check:
+								return ("ship too long", player_ships)
+						# if the tile occupied is down or right to the current tile,
+						# then the current tile is first to be added to the dictionary of ships
+						else:
+							ship_name = str(y) + str(x)
+							player_ships[ship_name] = []
+							player_ships[ship_name].append([y, x])
+				# if there are no tiles occupied nearby,
+				# the current tile is the one-tile ship
+				else:
+					ship_name = str(y) + str(x)
+					player_ships[ship_name] = []
+					player_ships[ship_name].append([y, x])
+	if len(player_ships) > ships_count:
+		return ("wrong placement", player_ships)
+	else: return ("placement confirmed", player_ships)
+
+
+# find out, which ship was shot
 def _get_ship_shot(ships, x, y):
 	for ship in ships:
 		for deck in ships[ship]:
 			if [y, x] == deck:
 				return ship
-			
-'''			return "hit"
-		else: return "killed"
-	else: return "miss"'''
+
 
 def _check_ship_killed(ship, hits, x, y):
 	check = True
@@ -101,6 +179,7 @@ def _check_ship_killed(ship, hits, x, y):
 def shot_result(play_map, hits, x, y):
 	sea_map = play_map[0]
 	ships = play_map[1]
+	# if the shot hits any ship:
 	if sea_map[y][x] == 1:
 		hits.append([y, x])
 		ship_shot = _get_ship_shot(ships, x, y)
@@ -112,7 +191,7 @@ def shot_result(play_map, hits, x, y):
 	elif sea_map[y][x] == 3:
 		return "squid"
 	elif sea_map[y][x] == 4:
-		return "shark"
+		return "fish"
 	elif sea_map[y][x] == 5:
 		return "dragon"
 	elif sea_map[y][x] == 6:
@@ -122,16 +201,3 @@ def shot_result(play_map, hits, x, y):
 	elif sea_map[y][x] == 8:
 		return "volcano"
 	else: return "miss"
-							
-
-'''
-map = create_map()
-hits = []
-for row in map[0]:
-	print(row)
-
-print(shot_result(map, hits, 2, 2))
-print(shot_result(map, hits, 3, 3))
-print(shot_result(map, hits, 4, 4))
-print(map[1])'''
-
