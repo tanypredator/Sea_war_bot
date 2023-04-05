@@ -32,22 +32,26 @@ keyboard.append(confirm_buttons)
 
 # Создаем игровую клавиатуру с нумерованными кнопками как список списков
 
-pair_AI_game_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
+player_game_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
                                     inline_keyboard=keyboard,
                                   resize_keyboard=True)
 
 
 # Пересоздаем клавиатуру после нажатия кнопки
-def rebuild_keyboard(old_board, x, y, status):
+def player_keyboard_rebuild(old_board, x, y, status):
 	keyboard = old_board
 	if status == "empty":
 		keyboard[y][x] = InlineKeyboardButton(
         text = '🌊',
-        callback_data=f'{x},{y}')
+        callback_data=f'{y+1},{x+1}')
 	elif status == "place":
 		keyboard[y][x] = InlineKeyboardButton(
         text = '🔲',
-        callback_data=f'{x},{y}')
+        callback_data=f'{y+1},{x+1}')
 	rebuilt_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup( inline_keyboard=keyboard,
                                   resize_keyboard=True)
 	return rebuilt_keyboard
+
+
+def player_keyboard_restore():
+	return player_game_kb
