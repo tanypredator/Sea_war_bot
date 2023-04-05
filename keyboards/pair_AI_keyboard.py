@@ -53,5 +53,10 @@ def player_keyboard_rebuild(old_board, x, y, status):
 	return rebuilt_keyboard
 
 
-def player_keyboard_restore():
-	return player_game_kb
+def player_map_restore(player_map: list[list], tiles: list[list]):
+	for tile in tiles:
+		y = tile[0]
+		x = tile[1]
+		player_map[y][x] = 0
+		tiles.remove(tile)
+	return (player_map, tiles)
