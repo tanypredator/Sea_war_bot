@@ -4,9 +4,9 @@ from aiogram.types import Message, CallbackQuery
 
 from keyboards.keyboard import yes_no_kb, game_mode_kb
 from keyboards.keyboard_map import game_kb, rebuild_keyboard
-from keyboards.pair_AI_keyboard import pair_AI_game_kb
+from keyboards.pair_AI_keyboard import player_game_kb
 from lexicon.lexicon_ru import LEXICON_RU
-from services.sea_war import create_map, shot_result, player_map
+from services.sea_war import create_AI_map, shot_result, player_map, get_AI_tiles_for_shot
 from User_dict.user_dict import users
 
 router: Router = Router()
@@ -28,6 +28,8 @@ async def process_start_command(message: Message):
                                        'hits': None,
                                        'tiles_left': None,
                                        'tiles': None,
+                                       'AI_tiles_for_shot': None,
+                                       'AI_hits': None,
                                        'total_games': 0,
                                        'wins': 0}
 
@@ -55,22 +57,23 @@ async def process_cancel_command(message: Message):
                              'снова - напишите об этом')
         users[message.from_user.id]['in_game'] = False
     else:
-        await message.answer(text ='А мы итак с вами не играем. '
+        await message.answer(text ='А мы и так с вами не играем. '
                              'Может, сыграем разок?', reply_markup=game_mode_kb)
 
 
 # Этот хэндлер срабатывает на выбор пользователя играть в игру без своего поля
 @router.message(Text(text=LEXICON_RU['one_sided_button']))
-async def process_yes_answer(message: Message):
+async def one_sided_answer(message: Message):
     await message.answer(text=LEXICON_RU['yes'], reply_markup=game_kb)
-    if not users[message.from_user.id]['in_game']:
-        users[message.from_user.id]['in_game'] = True
-        users[message.from_user.id]['game_mode'] = 'one_sided'
-        users[message.from_user.id]['total_games'] += 1
-        users[message.from_user.id]['AI_map'] = create_map()
-        users[message.from_user.id]['hits'] = []
-        users[message.from_user.id]['attempts'] = ATTEMPTS
-        users[message.from_user.id]['ships_left'] = SHIPS_LEFT
+    user = users[message.from_user.id]
+    if not user['in_game']:
+        user['in_game'] = True
+        user['game_mode'] = 'one_sided'
+        user['total_games'] += 1
+        user['AI_map'] = create_AI_map()
+        user['hits'] = []
+        user['attempts'] = ATTEMPTS
+        user['ships_left'] = SHIPS_LEFT
     else:
         await message.answer('Пока мы играем в игру я могу '
                              'реагировать только на нажатие кнопок на игровом поле '
@@ -85,19 +88,22 @@ async def process_no_answer(message: Message):
 
 # Этот хэндлер срабатывает на выбор пользователя играть в игру против компьютера
 @router.message(Text(text=LEXICON_RU['pair_AI_button']))
-async def process_yes_answer(message: Message):
-    await message.answer(text=LEXICON_RU['yes'], reply_markup=pair_AI_game_kb)
-    if not users[message.from_user.id]['in_game']:
-        users[message.from_user.id]['in_game'] = True
-        users[message.from_user.id]['game_mode'] = 'pair_AI'
-        users[message.from_user.id]['total_games'] += 1
-        users[message.from_user.id]['AI_map'] = create_map()
-        users[message.from_user.id]['hits'] = []
-        users[message.from_user.id]['tiles'] = []
-        users[message.from_user.id]['tiles_left'] = TILES_LEFT
-        users[message.from_user.id]['ships_left'] = SHIPS_LEFT
-        users[message.from_user.id]['player_map'] = player_map()
-        users[message.from_user.id]['player_ships'] = {}
+async def pair_AI_answer(message: Message):
+    await message.answer(text=LEXICON_RU['yes'], reply_markup=player_game_kb)
+    user = users[message.from_user.id]
+    if not user['in_game']:
+        user['in_game'] = True
+        user['game_mode'] = 'pair_AI'
+        user['total_games'] += 1
+        user['AI_map'] = create_AI_map()
+        user['hits'] = []
+        user['tiles'] = []
+        user['AI_tiles_for_shot'] = get_AI_tiles_for_shot(user['player_map'])
+        user['AI_hits'] = []
+        user['tiles_left'] = TILES_LEFT
+        user['ships_left'] = SHIPS_LEFT
+        user['player_map'] = player_map()
+        user['player_ships'] = {}
     else:
         await message.answer('Пока мы играем в игру я могу '
                              'реагировать только на нажатие кнопок на игровом поле '
