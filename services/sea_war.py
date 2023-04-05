@@ -1,4 +1,4 @@
-from random import randint
+from random import randint, choice
 
 
 def _check_tile(y: int, x: int, map: list[list]):
@@ -28,7 +28,7 @@ def check_ship(length: int, orient: list, head_y: int, head_x: int, map: list[li
 			return check
 
 
-def create_map():
+def create_AI_map():
 	# create an empty game map
 	sea_map = []
 	for i in range(10):
@@ -154,7 +154,7 @@ def player_ship_placement(player_ships: dict, player_map: list[list]):
 					ship_name = str(y) + str(x)
 					player_ships[ship_name] = []
 					player_ships[ship_name].append([y, x])
-	if len(player_ships) > ships_count:
+	if len(player_ships) != ships_count:
 		return ("wrong placement", player_ships)
 	else: return ("placement confirmed", player_ships)
 
@@ -176,9 +176,7 @@ def _check_ship_killed(ship, hits, x, y):
 	return check
 
 
-def shot_result(play_map, hits, x, y):
-	sea_map = play_map[0]
-	ships = play_map[1]
+def shot_result(sea_map, ships, hits, x, y):
 	# if the shot hits any ship:
 	if sea_map[y][x] == 1:
 		hits.append([y, x])
@@ -201,3 +199,45 @@ def shot_result(play_map, hits, x, y):
 	elif sea_map[y][x] == 8:
 		return "volcano"
 	else: return "miss"
+
+
+def confirm_player_ships(player_map: list[list], player_ships: dict):
+	for ship in player_ships:
+		for deck in player_ships[ship]:
+			y = deck[0]
+			x = deck[1]
+			player_map[y][x] = 1
+	return (player_map, player_ships)
+
+
+def get_AI_tiles_for_shot(player_map: list[list]):
+	AI_tiles_for_shot = []
+	for y in range(1, 9):
+		for x in range(1, 9):
+			AI_tiles_for_shot.append([y, x])
+	return AI_tiles_for_shot
+
+
+def AI_shot(AI_tiles_for_shot: list, AI_hits: list, confirmed_player_map: tuple):
+	shot = choice(AI_tiles_for_shot)
+	y = shot[0]
+	x = shot[1]
+	player_map = confirmed_player_map[0]
+	ships = confirmed_player_map[1]
+	result = shot_result(player_map, ships, AI_hits, x, y)
+	
+	if result == "killed":
+		tiles_to_remove = [[y, x], [y-1, x-1], [y-1, x], [y-1, x+1], [y, x+1], [y+1, x+1], [y+1, x], [y+1, x-1], [y, x-1]]
+		for tile in tiles_to_remove:
+			if tile in AI_tiles_for_shot:
+				AI_tiles_for_shot.remove(tile)
+	elif result == "hit":
+		tiles_to_remove = [[y, x], [y-1, x-1], [y-1, x+1], [y+1, x+1], [y+1, x-1]]
+		for tile in tiles_to_remove:
+			if tile in AI_tiles_for_shot:
+				AI_tiles_for_shot.remove(tile)
+	else:
+		AI_tiles_for_shot.remove([y, x])
+	
+	return (result, AI_tiles_for_shot, AI_hits)
+
