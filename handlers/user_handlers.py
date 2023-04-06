@@ -24,12 +24,14 @@ async def process_start_command(message: Message):
                                        'AI_map': None,
                                        'player_map': None,
                                        'attempts': None,
-                                       'ships_left': None,
-                                       'hits': None,
+                                       'AI_ships_left': None,
+                                       'player_hits': None,
                                        'tiles_left': None,
                                        'tiles': None,
                                        'AI_tiles_for_shot': None,
                                        'AI_hits': None,
+                                       'player_kb': None,
+                                       'enemy_kb': None,
                                        'total_games': 0,
                                        'wins': 0}
 
@@ -71,9 +73,9 @@ async def one_sided_answer(message: Message):
         user['game_mode'] = 'one_sided'
         user['total_games'] += 1
         user['AI_map'] = create_AI_map()
-        user['hits'] = []
+        user['player_hits'] = []
         user['attempts'] = ATTEMPTS
-        user['ships_left'] = SHIPS_LEFT
+        user['AI_ships_left'] = SHIPS_LEFT
     else:
         await message.answer('Пока мы играем в игру я могу '
                              'реагировать только на нажатие кнопок на игровом поле '
@@ -96,12 +98,12 @@ async def pair_AI_answer(message: Message):
         user['game_mode'] = 'pair_AI'
         user['total_games'] += 1
         user['AI_map'] = create_AI_map()
-        user['hits'] = []
+        user['player_hits'] = []
         user['tiles'] = []
         user['AI_tiles_for_shot'] = get_AI_tiles_for_shot(user['player_map'])
         user['AI_hits'] = []
         user['tiles_left'] = TILES_LEFT
-        user['ships_left'] = SHIPS_LEFT
+        user['AI_ships_left'] = SHIPS_LEFT
         user['player_map'] = player_map()
         user['player_ships'] = {}
     else:
