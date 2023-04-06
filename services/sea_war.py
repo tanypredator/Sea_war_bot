@@ -239,5 +239,5 @@ def AI_shot(AI_tiles_for_shot: list, AI_hits: list, confirmed_player_map: tuple)
 	else:
 		AI_tiles_for_shot.remove([y, x])
 	
-	return (result, AI_tiles_for_shot, AI_hits)
+	return (x, y, result, AI_tiles_for_shot, AI_hits)
 
