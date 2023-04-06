@@ -14,19 +14,21 @@ SHIPS_LEFT: int = 7
 
 
 # Этот хэндлер срабатывает на любую из игровых кнопок
-@router.callback_query(lambda callback: users[callback.from_user.id]['game_mode'] == 'one_sided', Text(text=[str(i)+','+str(j) for i in range(1,9) for j in range(1,9)]))
+@router.callback_query(Text(text=['AI,'+str(i)+','+str(j) for i in range(1,9) for j in range(1,9)]))
 async def process_game_button(callback: CallbackQuery):
     coords = callback.data.split(',')
-    coord_y = int(coords[0]) - 1
-    coord_x = int(coords[1]) - 1
+    coord_y = int(coords[1])
+    coord_x = int(coords[2])
     user = users[callback.from_user.id]
     user['attempts'] -= 1
     play_map = user['AI_map']
-    hits = user['hits']
+    for row in play_map[0]:
+    	print(row)
+    hits = user['player_hits']
     result = shot_result(play_map[0], play_map[1], hits, coord_x, coord_y)
     if result == 'killed':
-    	user['ships_left'] -= 1
-    if user['ships_left'] == 0:
+    	user['AI_ships_left'] -= 1
+    if user['AI_ships_left'] == 0:
         await callback.message.edit_text(
         text=LEXICON_RU['user_won'],
         reply_markup=None)
