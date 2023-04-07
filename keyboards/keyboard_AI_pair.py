@@ -21,15 +21,15 @@ for i in range(1, 9):
             buttons = []
 
 
-next_move_button = []
-next_move_button.append(InlineKeyboardButton(
+next_move_player_button = []
+next_move_player_button.append(InlineKeyboardButton(
         text = LEXICON_RU['next_move'],
-        callback_data='next_move'))
-confirm_buttons.append(InlineKeyboardButton(
+        callback_data='next_move_player'))
+next_move_player_button.append(InlineKeyboardButton(
         text = LEXICON_RU['/cancel'],
         callback_data='/cancel'))
 
-keyboard.append(confirm_buttons)
+keyboard.append(next_move_player_button)
 
 
 # Создаем игровую клавиатуру с нумерованными кнопками как список списков
@@ -86,6 +86,30 @@ def rebuild_keyboard_AI_pair(old_board, x, y, status):
 		keyboard[y][x] = InlineKeyboardButton(
         text = '🌋',
         callback_data=coords)
+	rebuilt_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup( inline_keyboard=keyboard,
+                                  resize_keyboard=True)
+	return rebuilt_keyboard
+
+
+def rebuild_player_keyboard_AI_pair(old_board, x, y, status):
+	keyboard = old_board
+	# because keyboard indices are from 0..
+	x -= 1
+	y -= 1
+	coords = f'inactive,{x},{y}'
+	if status == "miss":
+		keyboard[y][x] = InlineKeyboardButton(
+        text = '💭',
+        callback_data=coords)
+	elif status == "hit":
+		keyboard[y][x] = InlineKeyboardButton(
+        text = '💥',
+        callback_data=coords)
+	elif status == "killed":
+		keyboard[y][x] = InlineKeyboardButton(
+        text = '💥',
+        callback_data=coords)
+
 	rebuilt_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup( inline_keyboard=keyboard,
                                   resize_keyboard=True)
 	return rebuilt_keyboard
