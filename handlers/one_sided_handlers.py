@@ -25,7 +25,9 @@ async def process_game_button(callback: CallbackQuery):
     for row in play_map[0]:
     	print(row)
     hits = user['player_hits']
+    print(coord_x, coord_y)
     result = shot_result(play_map[0], play_map[1], hits, coord_x, coord_y)
+    print(result)
     if result == 'killed':
     	user['AI_ships_left'] -= 1
     if user['AI_ships_left'] == 0:
