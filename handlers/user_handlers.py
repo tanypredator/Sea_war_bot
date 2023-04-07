@@ -4,7 +4,7 @@ from aiogram.types import Message, CallbackQuery
 
 from keyboards.keyboard import yes_no_kb, game_mode_kb
 from keyboards.keyboard_map import game_kb, rebuild_keyboard
-from keyboards.pair_AI_keyboard import player_game_kb
+from keyboards.player_map_keyboard import player_game_kb
 from lexicon.lexicon_ru import LEXICON_RU
 from services.sea_war import create_AI_map, shot_result, player_map, get_AI_tiles_for_shot
 from User_dict.user_dict import users
@@ -55,12 +55,25 @@ async def process_help_command(message: Message):
 @router.message(Command(commands=['cancel']))
 async def process_cancel_command(message: Message):
     if users[message.from_user.id]['in_game']:
-        await message.answer('Вы вышли из игры. Если захотите сыграть '
-                             'снова - напишите об этом')
+        await message.answer(text=LEXICON_RU['cancel_in_game'])
         users[message.from_user.id]['in_game'] = False
     else:
-        await message.answer(text ='А мы и так с вами не играем. '
-                             'Может, сыграем разок?', reply_markup=game_mode_kb)
+        await message.answer(text =LEXICON_RU['cancel_out_of_game'], reply_markup=game_mode_kb)
+
+
+# Этот хэндлер срабатывает на инлайн кнопку "cancel"
+@router.callback_query(Text(text='/cancel'))
+async def cancel_inline(callback: CallbackQuery):
+    user = users[callback.from_user.id]
+    if user['in_game']:
+        await callback.message.edit_text(text =LEXICON_RU['cancel_in_game'], reply_markup=None)
+        user['in_game'] = False
+        await callback.message.answer(text=LEXICON_RU['new_game'], reply_markup=game_mode_kb)
+    else:
+        await callback.message.edit_text(text =LEXICON_RU['cancel_out_of_game'],  reply_markup=None)
+        await callback.message.answer(text=LEXICON_RU['new_game'], reply_markup=game_mode_kb)
+
+        await callback.answer()
 
 
 # Этот хэндлер срабатывает на выбор пользователя играть в игру без своего поля
@@ -80,12 +93,6 @@ async def one_sided_answer(message: Message):
         await message.answer('Пока мы играем в игру я могу '
                              'реагировать только на нажатие кнопок на игровом поле '
                              'и команды /cancel и /stat')
-
-
-# Этот хэндлер срабатывает на отказ пользователя играть в игру
-@router.message(Text(text=LEXICON_RU['no_button']))
-async def process_no_answer(message: Message):
-    await message.answer(text=LEXICON_RU['no'])
 
 
 # Этот хэндлер срабатывает на выбор пользователя играть в игру против компьютера
