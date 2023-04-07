@@ -37,7 +37,7 @@ player_game_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
                                   resize_keyboard=True)
 
 
-# Пересоздаем клавиатуру после нажатия кнопки
+#  rebuild keyboard after ship deck placement
 def player_keyboard_rebuild(old_board, x, y, status):
 	keyboard = old_board
 	x -= 1
@@ -55,6 +55,7 @@ def player_keyboard_rebuild(old_board, x, y, status):
 	return rebuilt_keyboard
 
 
+# remove previously chosen tiles from map and list of tiles
 def player_map_restore(player_map: list[list], tiles: list[list]):
 	for tile in tiles:
 		y = tile[0]
@@ -62,3 +63,23 @@ def player_map_restore(player_map: list[list], tiles: list[list]):
 		player_map[y][x] = 0
 		tiles.remove(tile)
 	return (player_map, tiles)
+
+
+# change confirmation button to the next move button
+def confirm_player_kb(player_kb):
+	new_player_kb = player_kb
+	new_player_kb.pop()
+	
+	next_move_AI_button = []
+	next_move_AI_button.append(InlineKeyboardButton(
+        text = LEXICON_RU['next_move'],
+        callback_data='next_move'))
+	next_move_AI_button.append(InlineKeyboardButton(
+        text = LEXICON_RU['/cancel'],
+        callback_data='/cancel'))
+	new_player_kb.append(next_move_AI_button)
+	
+	in_game_player_kb: InlineKeyboardMarkup = InlineKeyboardMarkup( inline_keyboard=new_player_kb,
+                                  resize_keyboard=True)
+    
+	return in_game_player_kb
