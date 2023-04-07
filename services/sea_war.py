@@ -78,7 +78,7 @@ def player_map():
 	sea_map = []
 	for i in range(10):
 		sea_map.append([0]*10)
-	return (sea_map)
+	return sea_map
 
 
 def player_ship_placement(player_ships: dict, player_map: list[list]):
@@ -201,13 +201,15 @@ def shot_result(sea_map, ships, hits, x, y):
 	else: return "miss"
 
 
+'''
 def confirm_player_ships(player_map: list[list], player_ships: dict):
 	for ship in player_ships:
 		for deck in player_ships[ship]:
 			y = deck[0]
 			x = deck[1]
 			player_map[y][x] = 1
-	return (player_map, player_ships)
+	return player_ships
+'''
 
 
 def get_AI_tiles_for_shot(player_map: list[list]):
@@ -218,13 +220,12 @@ def get_AI_tiles_for_shot(player_map: list[list]):
 	return AI_tiles_for_shot
 
 
-def AI_shot(AI_tiles_for_shot: list, AI_hits: list, confirmed_player_map: tuple):
+def AI_shot(AI_tiles_for_shot: list, AI_hits: list, player_map, player_ships):
 	shot = choice(AI_tiles_for_shot)
 	y = shot[0]
 	x = shot[1]
-	player_map = confirmed_player_map[0]
-	ships = confirmed_player_map[1]
-	result = shot_result(player_map, ships, AI_hits, x, y)
+
+	result = shot_result(player_map, player_ships, AI_hits, x, y)
 	
 	if result == "killed":
 		tiles_to_remove = [[y, x], [y-1, x-1], [y-1, x], [y-1, x+1], [y, x+1], [y+1, x+1], [y+1, x], [y+1, x-1], [y, x-1]]
