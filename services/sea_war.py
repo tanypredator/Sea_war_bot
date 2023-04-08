@@ -162,9 +162,8 @@ def player_ship_placement(player_ships: dict, player_map: list[list]):
 # find out, which ship was shot
 def _get_ship_shot(ships, x, y):
 	for ship in ships:
-		for deck in ships[ship]:
-			if [y, x] == deck:
-				return ship
+		if [y, x] in deck:
+			return ship
 
 
 def _check_ship_killed(ship, hits, x, y):
