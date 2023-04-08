@@ -184,21 +184,9 @@ def shot_result(sea_map, ships, hits, x, y):
 		if _check_ship_killed(ships[ship_shot], hits, x, y):
 			return "killed"
 		else: return "hit"
-	elif sea_map[y][x] == 2:
-		return "mermaid"
-	elif sea_map[y][x] == 3:
-		return "squid"
-	elif sea_map[y][x] == 4:
-		return "fish"
-	elif sea_map[y][x] == 5:
-		return "dragon"
-	elif sea_map[y][x] == 6:
-		return "boat"
-	elif sea_map[y][x] == 7:
-		return "island"
-	elif sea_map[y][x] == 8:
-		return "volcano"
-	else: return "miss"
+    else:
+        return ("mermaid", "squid", "fish", "dragon", "boat",
+                "island", "volcano", "miss")[min(9, sea_map[y][x]) - 2]
 
 
 '''
