@@ -4,6 +4,8 @@ from random import randint, choice
 def _check_tile(y: int, x: int, map: list[list]):
 	# check the tile and its adjacent tiles
 	check = map[y][x] + map[y-1][x] + map[y+1][x] + map[y][x-1] + map[y][x+1] + map[y-1][x-1] + map[y-1][x+1] + map[y+1][x-1] + map[y+1][x+1]
+	# map - функция стандартной либы, не называй её именем переменные, она тебе еще пригодится
+	# https://docs.python.org/3/library/functions.html
 	return check
 
 
