@@ -130,13 +130,18 @@ async def go_to_AI_move(callback: CallbackQuery):
     user = users[callback.from_user.id]
     # go to player map:
     await callback.message.edit_text(text='Мой ход', reply_markup=user['player_kb'])
-    await asyncio.sleep(3)
+    await asyncio.sleep(2)
     AI_shot_result = AI_shot(user['AI_tiles_for_shot'], user['AI_hits'], user['player_map'], user['player_ships'])
     user['AI_tiles_for_shot'] = AI_shot_result[3]
     user['AI_hits'] = AI_shot_result[4]
     AI_result = AI_shot_result[2]
-    user['player_kb'] = rebuild_player_keyboard_AI_pair(callback.message.reply_markup.inline_keyboard,
-                                                            AI_shot_result[0], AI_shot_result[1], AI_result)
+    ai_x = AI_shot_result[0]
+    ai_y = AI_shot_result[1]
+    print(ai_x, ai_y)
+    print(AI_result)
+    user['player_kb'] = rebuild_player_keyboard_AI_pair(user['player_kb'].inline_keyboard,
+                                                        ai_x, ai_y, AI_result)
+    await callback.message.edit_text(text=AI_result, reply_markup=user['player_kb'])
 
     await callback.answer()
 
