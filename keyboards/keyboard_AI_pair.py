@@ -38,7 +38,6 @@ AI_pair_game_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
 
 
 # Пересоздаем клавиатуру после нажатия кнопки
-
 def rebuild_keyboard_AI_pair(old_board, x, y, status):
     keyboard = old_board
     # because keyboard indices are from 0...
