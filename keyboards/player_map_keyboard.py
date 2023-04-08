@@ -39,14 +39,12 @@ player_game_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
 #  rebuild keyboard after ship deck placement
 def player_keyboard_rebuild(old_board, x, y, status):
     keyboard = old_board
-    x -= 1
-    y -= 1
     if status == "empty":
-        keyboard[y][x] = InlineKeyboardButton(
+        keyboard[y-1][x-1] = InlineKeyboardButton(
             text='🌊',
             callback_data=f'{y},{x}')
     elif status == "place":
-        keyboard[y][x] = InlineKeyboardButton(
+        keyboard[y-1][x-1] = InlineKeyboardButton(
             text='🔲',
             callback_data=f'{y},{x}')
     rebuilt_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=keyboard,
