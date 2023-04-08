@@ -101,13 +101,14 @@ async def pair_AI_answer(message: Message):
     await message.answer(text=LEXICON_RU['yes'], reply_markup=player_game_kb)
     user = users[message.from_user.id]
     if not user['in_game']:
+        AI_tiles = get_AI_tiles_for_shot()
         user['in_game'] = True
         user['game_mode'] = 'pair_AI'
         user['total_games'] += 1
         user['AI_map'] = create_AI_map()
         user['player_hits'] = []
         user['tiles'] = []
-        user['AI_tiles_for_shot'] = get_AI_tiles_for_shot(user['player_map'])
+        user['AI_tiles_for_shot'] = AI_tiles
         user['AI_hits'] = []
         user['tiles_left'] = TILES_LEFT
         user['AI_ships_left'] = SHIPS_LEFT
