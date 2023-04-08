@@ -99,7 +99,7 @@ def player_ship_placement(player_ships: dict, player_map: list[list]):
 				# if 2 or more adjacent tiles are occupied,
 				# it can be valid if they are all in vertical or horizontal line
 				if _check_tile(y, x, player_map) > 2:
-					if (n+s)>1:
+					if (n+s) > 1:
 						# find, which ship already placed is near the tile
 						check = False
 						for ship in player_ships:
@@ -110,7 +110,7 @@ def player_ship_placement(player_ships: dict, player_map: list[list]):
 								check = True
 						if not check:
 							return ("ship too long", player_ships)
-					elif (e+w)>1:
+					elif (e+w) > 1:
 						check = False
 						for ship in player_ships:
 							if [y, x-1] in player_ships[ship] and len(player_ships[ship]) < 2:
@@ -121,7 +121,7 @@ def player_ship_placement(player_ships: dict, player_map: list[list]):
 				# if only one adjacent tile is occupied
 				# it can be valid if it is not in diagonal
 				elif _check_tile(y, x, player_map) == 2:
-					if (ne+se+sw+nw)>0:
+					if (ne+se+sw+nw) > 0:
 						return ("diagonal placement", player_ships)
 					else:
 						# if the tile occupied is up or left to the current tile,
@@ -212,7 +212,7 @@ def confirm_player_ships(player_map: list[list], player_ships: dict):
 '''
 
 
-def get_AI_tiles_for_shot(player_map: list[list]):
+def get_AI_tiles_for_shot():
 	AI_tiles_for_shot = []
 	for y in range(1, 9):
 		for x in range(1, 9):
