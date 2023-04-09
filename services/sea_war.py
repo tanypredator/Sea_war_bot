@@ -50,7 +50,7 @@ def create_AI_map():
 			if check_ship(length, orient, head_y, head_x, sea_map):
 				check = True
 				# add the ship and its coords to the dict of ships placed on map:
-				ship_name = str(length) + f'_{count}'
+				ship_name = f'{length}_{count}'
 				ships_in_game[ship_name] = []
 				ships_in_game[ship_name].append([head_y, head_x])
 				sea_map[head_y][head_x] = 1
