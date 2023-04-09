@@ -31,9 +31,7 @@ def check_ship(length: int, orient: list, head_y: int, head_x: int, map: list[li
 
 def create_AI_map():
 	# create an empty game map
-	sea_map = []
-	for i in range(10):
-		sea_map.append([0]*10)
+	sea_map = [[0] * 10 for i in range(10)]
 
 	list_of_ships = [3, 3, 2, 2, 1, 1, 1]
 	ships_in_game = {}
