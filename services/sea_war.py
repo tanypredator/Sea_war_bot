@@ -74,10 +74,7 @@ def create_AI_map():
 
 def player_map():
 	# create an empty game map
-	sea_map = []
-	for i in range(10):
-		sea_map.append([0]*10)
-	return sea_map
+	sea_map = [[0] * 10 for i in range(10)]
 
 
 def player_ship_placement(player_ships: dict, player_map: list[list]):
