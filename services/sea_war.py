@@ -1,9 +1,10 @@
 from random import randint, choice
 
 
-def _check_tile(y: int, x: int, map: list[list]):
+def _check_tile(y: int, x: int, sea_map: list[list]):
 	# check the tile and its adjacent tiles
-	check = map[y][x] + map[y-1][x] + map[y+1][x] + map[y][x-1] + map[y][x+1] + map[y-1][x-1] + map[y-1][x+1] + map[y+1][x-1] + map[y+1][x+1]
+	check = sea_map[y][x] + sea_map[y-1][x] + sea_map[y+1][x] + sea_map[y][x-1] + sea_map[y][x+1] + \
+			sea_map[y-1][x-1] + sea_map[y-1][x+1] + sea_map[y+1][x-1] + sea_map[y+1][x+1]
 	return check
 
 
