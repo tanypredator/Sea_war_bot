@@ -193,8 +193,7 @@ def shot_result(sea_map, ships, hits, x, y):
 def confirm_player_ships(player_map: list[list], player_ships: dict):
 	for ship in player_ships:
 		for deck in player_ships[ship]:
-			y = deck[0]
-			x = deck[1]
+			y, x = deck
 			player_map[y][x] = 1
 	return player_ships
 '''
