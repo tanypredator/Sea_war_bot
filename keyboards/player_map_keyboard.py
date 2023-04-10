@@ -39,14 +39,16 @@ player_game_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
 #  rebuild keyboard after ship deck placement
 def player_keyboard_rebuild(old_board, x, y, status):
     keyboard = old_board
+    x -= 1
+    y -= 1
     if status == "empty":
-        keyboard[y-1][x-1] = InlineKeyboardButton(
+        keyboard[y][x] = InlineKeyboardButton(
             text='🌊',
-            callback_data=f'{y},{x}')
+            callback_data=f'{y+1},{x+1}')
     elif status == "place":
-        keyboard[y-1][x-1] = InlineKeyboardButton(
+        keyboard[y][x] = InlineKeyboardButton(
             text='🔲',
-            callback_data=f'{y},{x}')
+            callback_data=f'{y+1},{x+1}')
     rebuilt_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=keyboard,
                                                                   resize_keyboard=True)
     return rebuilt_keyboard
@@ -54,9 +56,8 @@ def player_keyboard_rebuild(old_board, x, y, status):
 
 # remove previously chosen tiles from map and list of tiles
 def player_map_restore(player_map: list[list], tiles: list[list]):
-    for tile in tiles:
-        y = tile[0]
-        x = tile[1]
+    for tile in tiles[:]:
+        y, x = tile
         player_map[y][x] = 0
         tiles.remove(tile)
     return (player_map, tiles)
