@@ -96,7 +96,10 @@ def player_ship_placement(player_ships: dict, player_map: list[list]):
 				# if 2 or more adjacent tiles are occupied,
 				# it can be valid if they are all in vertical or horizontal line
 				if _check_tile(y, x, player_map) > 2:
-					if (n+s) > 1:
+					if (ne+se+sw+nw) > 0:
+						return ("diagonal placement", player_ships)
+					
+					elif (n+s) > 1:
 						# find, which ship already placed is near the tile
 						check = False
 						for ship in player_ships:
@@ -159,7 +162,7 @@ def player_ship_placement(player_ships: dict, player_map: list[list]):
 # find out, which ship was shot
 def _get_ship_shot(ships, x, y):
 	for ship in ships:
-		if [y, x] in ship:
+		if [y, x] in ships[ship]:
 			return ship
 
 
