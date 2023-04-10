@@ -20,7 +20,7 @@ async def process_start_command(message: Message):
     await message.answer(text=LEXICON_RU['/start'], reply_markup=game_mode_kb)
     if message.from_user.id not in users:
         users[message.from_user.id] = {'in_game': False,
-        'game_mode': None,
+        'shot_status': None,
                                        'AI_map': None,
                                        'player_map': None,
                                        'attempts': None,
@@ -30,6 +30,7 @@ async def process_start_command(message: Message):
                                        'tiles': None,
                                        'AI_tiles_for_shot': None,
                                        'AI_hits': None,
+                                       'player_ships_left': None,
                                        'player_kb': None,
                                        'enemy_kb': None,
                                        'total_games': 0,
@@ -83,7 +84,6 @@ async def one_sided_answer(message: Message):
     user = users[message.from_user.id]
     if not user['in_game']:
         user['in_game'] = True
-        user['game_mode'] = 'one_sided'
         user['total_games'] += 1
         user['AI_map'] = create_AI_map()
         user['player_hits'] = []
@@ -103,7 +103,7 @@ async def pair_AI_answer(message: Message):
     if not user['in_game']:
         AI_tiles = get_AI_tiles_for_shot()
         user['in_game'] = True
-        user['game_mode'] = 'pair_AI'
+        user['shot_status'] = 'not_shot_yet'
         user['total_games'] += 1
         user['AI_map'] = create_AI_map()
         user['player_hits'] = []
@@ -112,6 +112,7 @@ async def pair_AI_answer(message: Message):
         user['AI_hits'] = []
         user['tiles_left'] = TILES_LEFT
         user['AI_ships_left'] = SHIPS_LEFT
+        user['player_ships_left'] = SHIPS_LEFT
         user['player_map'] = player_map()
         user['player_ships'] = {}
     else:
