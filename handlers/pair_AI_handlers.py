@@ -57,31 +57,35 @@ async def process_game_button(callback: CallbackQuery):
 async def confirm_placement(callback: CallbackQuery):
     user = users[callback.from_user.id]
     # check the player ship placement:
-    result = player_ship_placement(user['player_ships'], user['player_map'])[0]
+    placement_check = player_ship_placement(user['player_ships'], user['player_map'])
+    result = placement_check[0]
     # and if it is wrong, restore the map and tiles to set:
     if result == "ship too long":
+        user['player_ships'] = {}
         user['tiles_left'] = 13
-        user['player_map'] = player_map_restore(user['player_map'], user['tiles'])[0]
-        user['tiles'] = player_map_restore(user['player_map'], user['tiles'])[1]
+        user['player_map'], user['tiles'] = player_map_restore(user['player_map'], user['tiles'])
+#        user['tiles'] = player_map_restore(user['player_map'], user['tiles'])[1]
         await callback.message.edit_text(text=LEXICON_RU['ship_too_long'], reply_markup=player_game_kb)
 
     elif result == "diagonal placement":
+        user['player_ships'] = {}
         user['tiles_left'] = 13
-        user['player_map'] = player_map_restore(user['player_map'], user['tiles'])[0]
-        user['tiles'] = player_map_restore(user['player_map'], user['tiles'])[1]
+        user['player_map'], user['tiles'] = player_map_restore(user['player_map'], user['tiles'])
+#        user['tiles'] = player_map_restore(user['player_map'], user['tiles'])[1]
         await callback.message.edit_text(text=LEXICON_RU['diagonal_placement'],
                                          reply_markup=player_game_kb)
 
     elif result == "wrong placement":
+        user['player_ships'] = {}
         user['tiles_left'] = 13
-        user['player_map'] = player_map_restore(user['player_map'], user['tiles'])[0]
-        user['tiles'] = player_map_restore(user['player_map'], user['tiles'])[1]
+        user['player_map'], user['tiles'] = player_map_restore(user['player_map'], user['tiles'])
+#        user['tiles'] = player_map_restore(user['player_map'], user['tiles'])[1]
         await callback.message.edit_text(text=LEXICON_RU['wrong_placement'],
                                          reply_markup=player_game_kb)
 
     elif result == "placement confirmed":
-        user['player_ships'] = player_ship_placement(user['player_ships'],
-                                                     user['player_map'])[1]
+        print(user['player_ships'])
+#        user['player_ships'] = placement_check[1]
 
         # replace confirmation button with the next move button and make tiles inactive:
         user['player_kb'] = confirm_player_kb(user['player_map'])
@@ -97,51 +101,64 @@ async def confirm_placement(callback: CallbackQuery):
 # Этот хэндлер срабатывает на кнопки стрельбы по карте компьютерного игрока
 @router.callback_query(Text(text=['AI_pair,' + str(i) + ',' + str(j) for i in range(1, 9) for j in range(1, 9)]))
 async def process_AI_pair_button(callback: CallbackQuery):
-    coords = callback.data.split(',')
-    coord_y = int(coords[1])
-    coord_x = int(coords[2])
     user = users[callback.from_user.id]
-    AI_map = user['AI_map']
-    player_hits = user['player_hits']
+    if user['shot_status'] == 'not_shot_yet':
+        coords = callback.data.split(',')
+        coord_y = int(coords[1])
+        coord_x = int(coords[2])
+    
+        AI_map = user['AI_map']
+        player_hits = user['player_hits']
 
-    # check the result of player shot:
-    result = shot_result(AI_map[0], AI_map[1], player_hits, coord_x, coord_y)
+        # check the result of player shot:
+        result = shot_result(AI_map[0], AI_map[1], player_hits, coord_x, coord_y)
 
-    if result == 'killed':
-        user['AI_ships_left'] -= 1
-    if user['AI_ships_left'] == 0:
-        await callback.message.edit_text(
-            text=LEXICON_RU['user_won'],
+        if result == 'killed':
+            user['AI_ships_left'] -= 1
+        if user['AI_ships_left'] == 0:
+            await callback.message.edit_text(
+                text=LEXICON_RU['user_won'],
             reply_markup=None)
-        user['wins'] += 1
-        user['in_game'] = False
-        await callback.message.answer(text=LEXICON_RU['new_game'], reply_markup=game_mode_kb)
+            user['wins'] += 1
+            user['in_game'] = False
+            await callback.message.answer(text=LEXICON_RU['new_game'], reply_markup=game_mode_kb)
 
-    else:
-        user['enemy_kb'] = rebuild_keyboard_AI_pair(callback.message.reply_markup.inline_keyboard, coord_x, coord_y,
+        else:
+            user['enemy_kb'] = rebuild_keyboard_AI_pair(callback.message.reply_markup.inline_keyboard, coord_x, coord_y,
                                                     result)
-        await callback.message.edit_text(
+            await callback.message.edit_text(
             text=LEXICON_RU[result], reply_markup=user['enemy_kb'])
+        user['shot_status'] = 'already_shot'
+    else:
+    	await callback.answer(text=LEXICON_RU['inactive_button'])
 
 
 # Этот хэндлер срабатывает на кнопку перехода к следующему ходу
 @router.callback_query(Text(text='next_move_AI'))
 async def go_to_AI_move(callback: CallbackQuery):
     user = users[callback.from_user.id]
+    user['shot_status'] = 'not_shot_yet'
     # go to player map:
     await callback.message.edit_text(text='Мой ход', reply_markup=user['player_kb'])
-    await asyncio.sleep(2)
+    await asyncio.sleep(3)
     AI_shot_result = AI_shot(user['AI_tiles_for_shot'], user['AI_hits'], user['player_map'], user['player_ships'])
+    AI_x = AI_shot_result[0]
+    AI_y = AI_shot_result[1]
+    AI_result = AI_shot_result[2]
     user['AI_tiles_for_shot'] = AI_shot_result[3]
     user['AI_hits'] = AI_shot_result[4]
-    AI_result = AI_shot_result[2]
-    ai_x = AI_shot_result[0]
-    ai_y = AI_shot_result[1]
-    print(ai_x, ai_y)
-    print(AI_result)
     user['player_kb'] = rebuild_player_keyboard_AI_pair(user['player_kb'].inline_keyboard,
-                                                        ai_x, ai_y, AI_result)
-    await callback.message.edit_text(text=AI_result, reply_markup=user['player_kb'])
+                                                            AI_x, AI_y, AI_result)
+    if AI_result == 'killed':
+        user['player_ships_left'] -= 1
+    if user['player_ships_left'] == 0:
+        await callback.message.edit_text(
+                text=LEXICON_RU['user_failed'],
+            reply_markup=None)
+        user['in_game'] = False
+        await callback.message.answer(text=LEXICON_RU['new_game'], reply_markup=game_mode_kb)
+    else:
+        await callback.message.edit_text(text=LEXICON_RU[AI_result], reply_markup=user['player_kb'])
 
     await callback.answer()
 
@@ -152,3 +169,13 @@ async def confirm_placement(callback: CallbackQuery):
     user = users[callback.from_user.id]
     # go to enemy map:
     await callback.message.edit_text(text='Ваш ход', reply_markup=user['enemy_kb'])
+    await callback.answer()
+
+
+# Этот хэндлер срабатывает на нажатие на неактивную кнопку карты игрока
+@router.callback_query(Text(text=['inactive,' + str(i) + ',' + str(j) for i in range(1, 9) for j in range(1, 9)]))
+async def note_inactive_button(callback: CallbackQuery):
+    await callback.message.edit_text(
+            text=LEXICON_RU['inactive_button'], reply_markup=callback.message.reply_markup)
+            
+    await callback.answer()
