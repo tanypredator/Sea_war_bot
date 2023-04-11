@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, KeyboardButtonRequestUser
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from lexicon.lexicon_ru import LEXICON_RU
@@ -36,5 +36,18 @@ game_mode_kb_builder.row(button_one_sided, button_pair_AI, button_pair_human, wi
 
 # Создаем клавиатуру с кнопками "Давай!" и "Не хочу!"
 game_mode_kb = game_mode_kb_builder.as_markup(
+                                one_time_keyboard=True,
+                                resize_keyboard=True)
+
+
+button_choose_enemy: KeyboardButton = KeyboardButton(
+            text="Выбрать противника",
+            request_user=KeyboardButtonRequestUser(request_id=1))
+
+choose_enemy_kb_builder: ReplyKeyboardBuilder = ReplyKeyboardBuilder()
+
+choose_enemy_kb_builder.row(button_choose_enemy)
+
+choose_enemy_kb = choose_enemy_kb_builder.as_markup(
                                 one_time_keyboard=True,
                                 resize_keyboard=True)
