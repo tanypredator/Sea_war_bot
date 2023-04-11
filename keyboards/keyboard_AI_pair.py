@@ -38,6 +38,7 @@ AI_pair_game_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
 
 
 # Пересоздаем клавиатуру после нажатия кнопки
+
 def rebuild_keyboard_AI_pair(old_board, x, y, status):
     keyboard = old_board
     # because keyboard indices are from 0...
@@ -95,15 +96,15 @@ def rebuild_player_keyboard_AI_pair(old_board, x, y, status):
     x -= 1
     y -= 1
     coords = f'inactive,{y},{x}'
-    if status == "miss":
+    if status == "miss_player":
         keyboard[y][x] = InlineKeyboardButton(
             text='💭',
             callback_data=coords)
-    elif status == "hit":
+    elif status == "hit_player":
         keyboard[y][x] = InlineKeyboardButton(
             text='💥',
             callback_data=coords)
-    elif status == "killed":
+    elif status == "killed_player":
         keyboard[y][x] = InlineKeyboardButton(
             text='💥',
             callback_data=coords)
