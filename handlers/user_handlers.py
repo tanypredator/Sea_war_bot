@@ -1,13 +1,15 @@
 from aiogram import Router
 from aiogram.filters import Command, CommandStart, Text
 from aiogram.types import Message, CallbackQuery
+from aiogram import Bot
 
-from keyboards.keyboard import yes_no_kb, game_mode_kb
+from keyboards.keyboard import yes_no_kb, game_mode_kb, choose_enemy_kb
 from keyboards.keyboard_map import game_kb, rebuild_keyboard
 from keyboards.player_map_keyboard import player_game_kb
 from lexicon.lexicon_ru import LEXICON_RU
 from services.sea_war import create_AI_map, shot_result, player_map, get_AI_tiles_for_shot
 from User_dict.user_dict import users
+
 
 router: Router = Router()
 ATTEMPTS: int = 40
@@ -33,6 +35,7 @@ async def process_start_command(message: Message):
                                        'player_ships_left': None,
                                        'player_kb': None,
                                        'enemy_kb': None,
+                                       'enemy_id': None,
                                        'total_games': 0,
                                        'wins': 0}
 
@@ -90,9 +93,7 @@ async def one_sided_answer(message: Message):
         user['attempts'] = ATTEMPTS
         user['AI_ships_left'] = SHIPS_LEFT
     else:
-        await message.answer('Пока мы играем в игру я могу '
-                             'реагировать только на нажатие кнопок на игровом поле '
-                             'и команды /cancel и /stat')
+        await message.answer(LEXICON_RU['choice_in_game'])
 
 
 # Этот хэндлер срабатывает на выбор пользователя играть в игру против компьютера
@@ -116,6 +117,37 @@ async def pair_AI_answer(message: Message):
         user['player_map'] = player_map()
         user['player_ships'] = {}
     else:
-        await message.answer('Пока мы играем в игру я могу '
-                             'реагировать только на нажатие кнопок на игровом поле '
-                             'и команды /cancel и /stat')
+        await message.answer(LEXICON_RU['choice_in_game'])
+
+
+# Этот хэндлер срабатывает на выбор пользователя играть в игру против человека
+@router.message(Text(text=LEXICON_RU['pair_human_button']))
+async def pair_AI_answer(message: Message):
+    await message.answer(text=LEXICON_RU['yes'], reply_markup=choose_enemy_kb)
+    user = users[message.from_user.id]
+    if not user['in_game']:
+        AI_tiles = get_AI_tiles_for_shot()
+        user['in_game'] = True
+        user['shot_status'] = 'not_shot_yet'
+        user['total_games'] += 1
+        user['AI_map'] = create_AI_map()
+        user['player_hits'] = []
+        user['tiles'] = []
+        user['AI_tiles_for_shot'] = AI_tiles
+        user['AI_hits'] = []
+        user['tiles_left'] = TILES_LEFT
+        user['AI_ships_left'] = SHIPS_LEFT
+        user['player_ships_left'] = SHIPS_LEFT
+        user['player_map'] = player_map()
+        user['player_ships'] = {}
+    else:
+        await message.answer(LEXICON_RU['choice_in_game'])
+
+
+@router.message(lambda message: message.user_shared)
+async def send_invite(message: Message, bot: Bot):
+    await bot.send_message(message.user_shared.user_id, "test message")
+    print(
+        f"Request {message.user_shared.request_id}. "
+        f"User ID: {message.user_shared.user_id}"
+    )
