@@ -190,16 +190,6 @@ def shot_result(sea_map, ships, hits, x, y):
                 "island", "volcano")[sea_map[y][x]-2]
 
 
-'''
-def confirm_player_ships(player_map: list[list], player_ships: dict):
-	for ship in player_ships:
-		for deck in player_ships[ship]:
-			y, x = deck
-			player_map[y][x] = 1
-	return player_ships
-'''
-
-
 def get_AI_tiles_for_shot():
 	AI_tiles_for_shot = []
 	for y in range(1, 9):
@@ -208,19 +198,31 @@ def get_AI_tiles_for_shot():
 	return AI_tiles_for_shot
 
 
+def enemy_shot_result(player_map, player_ships, enemy_hits, x, y):
+	# if the shot hits any ship:
+	if player_map[y][x] == 1:
+		enemy_hits.append([y, x])
+		ship_shot = _get_ship_shot(player_ships, x, y)
+		if _check_ship_killed(player_ships[ship_shot], enemy_hits, x, y):
+			return "killed_player"
+		else: return "hit_player"
+	elif player_map[y][x] == 0:
+		return "miss_player"
+
+
 def AI_shot(AI_tiles_for_shot: list, AI_hits: list, player_map, player_ships):
 	shot = choice(AI_tiles_for_shot)
 	y = shot[0]
 	x = shot[1]
 
-	result = shot_result(player_map, player_ships, AI_hits, x, y)
+	result = enemy_shot_result(player_map, player_ships, AI_hits, x, y)
 	
-	if result == "killed":
+	if result == "killed_player":
 		tiles_to_remove = [[y, x], [y-1, x-1], [y-1, x], [y-1, x+1], [y, x+1], [y+1, x+1], [y+1, x], [y+1, x-1], [y, x-1]]
 		for tile in tiles_to_remove:
 			if tile in AI_tiles_for_shot:
 				AI_tiles_for_shot.remove(tile)
-	elif result == "hit":
+	elif result == "hit_player":
 		tiles_to_remove = [[y, x], [y-1, x-1], [y-1, x+1], [y+1, x+1], [y+1, x-1]]
 		for tile in tiles_to_remove:
 			if tile in AI_tiles_for_shot:
