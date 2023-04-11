@@ -130,7 +130,10 @@ async def process_AI_pair_button(callback: CallbackQuery):
             text=LEXICON_RU[result], reply_markup=user['enemy_kb'])
         user['shot_status'] = 'already_shot'
     else:
-    	await callback.answer(text=LEXICON_RU['inactive_button'])
+        await callback.message.edit_text(
+            text=LEXICON_RU['inactive_button'], reply_markup=callback.message.reply_markup)
+            
+    await callback.answer()
 
 
 # Этот хэндлер срабатывает на кнопку перехода к следующему ходу
@@ -140,7 +143,7 @@ async def go_to_AI_move(callback: CallbackQuery):
     user['shot_status'] = 'not_shot_yet'
     # go to player map:
     await callback.message.edit_text(text='Мой ход', reply_markup=user['player_kb'])
-    await asyncio.sleep(3)
+    await asyncio.sleep(2)
     AI_shot_result = AI_shot(user['AI_tiles_for_shot'], user['AI_hits'], user['player_map'], user['player_ships'])
     AI_x = AI_shot_result[0]
     AI_y = AI_shot_result[1]
@@ -149,7 +152,7 @@ async def go_to_AI_move(callback: CallbackQuery):
     user['AI_hits'] = AI_shot_result[4]
     user['player_kb'] = rebuild_player_keyboard_AI_pair(user['player_kb'].inline_keyboard,
                                                             AI_x, AI_y, AI_result)
-    if AI_result == 'killed':
+    if AI_result == 'killed_player':
         user['player_ships_left'] -= 1
     if user['player_ships_left'] == 0:
         await callback.message.edit_text(
