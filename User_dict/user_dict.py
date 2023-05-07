@@ -1,1 +1,3 @@
 users = {}
+
+game_pairs = {}
