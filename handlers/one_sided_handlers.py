@@ -3,7 +3,7 @@ from aiogram.filters import Text
 from aiogram.types import CallbackQuery
 
 from keyboards.keyboard import game_mode_kb
-from keyboards.keyboard_map import rebuild_keyboard
+from keyboards.keyboard_one_sided import rebuild_keyboard
 from lexicon.lexicon_ru import LEXICON_RU
 from services.sea_war import shot_result
 from User_dict.user_dict import users
