@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from lexicon.lexicon_ru import LEXICON_RU
+from lexicon.lexicon_ru import LEXICON_RU, HIT_BUTTON_SYMBOLS
 
 # ------- Создаем игровую клавиатуру без использования билдера -------
 
@@ -44,47 +44,10 @@ def rebuild_keyboard_AI_pair(old_board, x, y, status):
     # because keyboard indices are from 0...
     x -= 1
     y -= 1
-    coords = f'AI_pair,{x},{y}'
-    if status == "miss":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='🌊',
-            callback_data=coords)
-    elif status == "hit":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='💥',
-            callback_data=coords)
-    elif status == "killed":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='💥',
-            callback_data=coords)
-    elif status == "mermaid":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='🧜‍♀',
-            callback_data=coords)
-    elif status == "squid":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='🦑',
-            callback_data=coords)
-    elif status == "shark":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='🦈',
-            callback_data=coords)
-    elif status == "dragon":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='🐉',
-            callback_data=coords)
-    elif status == "boat":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='⛵️',
-            callback_data=coords)
-    elif status == "island":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='🏝',
-            callback_data=coords)
-    elif status == "volcano":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='🌋',
-            callback_data=coords)
+    coords = f'AI_pair,{x+1},{y+1}'
+    keyboard[y][x] = InlineKeyboardButton(
+        text=HIT_BUTTON_SYMBOLS[status],
+        callback_data=coords)
     rebuilt_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=keyboard,
                                                                   resize_keyboard=True)
     return rebuilt_keyboard
@@ -95,20 +58,10 @@ def rebuild_player_keyboard_AI_pair(old_board, x, y, status):
     # because keyboard indices are from 0...
     x -= 1
     y -= 1
-    coords = f'inactive,{y},{x}'
-    if status == "miss_player":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='💭',
-            callback_data=coords)
-    elif status == "hit_player":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='💥',
-            callback_data=coords)
-    elif status == "killed_player":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='💥',
-            callback_data=coords)
-
+    coords = f'inactive,{y+1},{x+1}'
+    keyboard[y][x] = InlineKeyboardButton(
+        text=HIT_BUTTON_SYMBOLS[status],
+        callback_data=coords)
     rebuilt_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=keyboard,
                                                                   resize_keyboard=True)
     return rebuilt_keyboard
