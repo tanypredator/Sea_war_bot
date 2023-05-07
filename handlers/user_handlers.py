@@ -3,12 +3,12 @@ from aiogram.filters import Command, CommandStart, Text
 from aiogram.types import Message, CallbackQuery
 from aiogram import Bot
 
-from keyboards.keyboard import yes_no_kb, game_mode_kb, choose_enemy_kb
-from keyboards.keyboard_map import game_kb, rebuild_keyboard
+from keyboards.keyboard import game_mode_kb, choose_enemy_kb, make_invitation_kb
+from keyboards.keyboard_one_sided import game_kb
 from keyboards.player_map_keyboard import player_game_kb
 from lexicon.lexicon_ru import LEXICON_RU
-from services.sea_war import create_AI_map, shot_result, player_map, get_AI_tiles_for_shot
-from User_dict.user_dict import users
+from services.sea_war import create_AI_map, player_map, get_AI_tiles_for_shot
+from User_dict.user_dict import users, game_pairs
 
 
 router: Router = Router()
@@ -26,7 +26,7 @@ async def process_start_command(message: Message):
                                        'AI_map': None,
                                        'player_map': None,
                                        'attempts': None,
-                                       'AI_ships_left': None,
+                                       'enemy_ships_left': None,
                                        'player_hits': None,
                                        'tiles_left': None,
                                        'tiles': None,
@@ -99,7 +99,7 @@ async def one_sided_answer(message: Message):
 # Этот хэндлер срабатывает на выбор пользователя играть в игру против компьютера
 @router.message(Text(text=LEXICON_RU['pair_AI_button']))
 async def pair_AI_answer(message: Message):
-    await message.answer(text=LEXICON_RU['yes'], reply_markup=player_game_kb)
+    await message.answer(text=LEXICON_RU['yes_pair'], reply_markup=player_game_kb)
     user = users[message.from_user.id]
     if not user['in_game']:
         AI_tiles = get_AI_tiles_for_shot()
@@ -112,7 +112,7 @@ async def pair_AI_answer(message: Message):
         user['AI_tiles_for_shot'] = AI_tiles
         user['AI_hits'] = []
         user['tiles_left'] = TILES_LEFT
-        user['AI_ships_left'] = SHIPS_LEFT
+        user['enemy_ships_left'] = SHIPS_LEFT
         user['player_ships_left'] = SHIPS_LEFT
         user['player_map'] = player_map()
         user['player_ships'] = {}
@@ -123,8 +123,53 @@ async def pair_AI_answer(message: Message):
 # Этот хэндлер срабатывает на выбор пользователя играть в игру против человека
 @router.message(Text(text=LEXICON_RU['pair_human_button']))
 async def pair_AI_answer(message: Message):
-    await message.answer(text=LEXICON_RU['yes'], reply_markup=choose_enemy_kb)
+    game_pairs[message.from_user.id] = {'first_player': message.from_user.id}
+    await message.answer(text=LEXICON_RU['yes_pair'], reply_markup=choose_enemy_kb)
     user = users[message.from_user.id]
+    if not user['in_game']:
+        AI_tiles = get_AI_tiles_for_shot()
+        user['in_game'] = True
+        user['shot_status'] = 'not_shot_yet'
+        user['total_games'] += 1
+        user['AI_map'] = create_AI_map()
+        user['player_hits'] = []
+        user['tiles'] = []
+        user['tiles_left'] = TILES_LEFT
+        user['enemy_ships_left'] = SHIPS_LEFT
+        user['player_ships_left'] = SHIPS_LEFT
+        user['player_map'] = player_map()
+        user['player_ships'] = {}
+    else:
+        await message.answer(LEXICON_RU['choice_in_game'])
+
+
+# this handler checks for the invited user in the base of users and sends an invitation
+@router.message(lambda message: message.user_shared)
+async def send_invite(message: Message, bot: Bot):
+    user = users[message.from_user.id]
+    if message.user_shared.user_id not in users:
+        await message.answer(LEXICON_RU['user_not_in_base'])
+    else:
+        user['enemy_id'] = message.user_shared.user_id
+        invitation = f"{message.from_user.id}{LEXICON_RU['invite_user']}"
+        invitation_kb = make_invitation_kb(message.from_user.id)
+        await bot.send_message(message.user_shared.user_id, invitation, reply_markup=invitation_kb)
+    print(
+        f"Request {message.user_shared.request_id}. "
+        f"User ID: {message.user_shared.user_id}"
+    )
+
+
+# Этот хэндлер срабатывает на согласие пользователя играть по приглашению
+@router.callback_query(Text(startswith='yes'))
+async def pair_AI_answer(callback: CallbackQuery):
+    game_pairs[callback.from_user.id] = {'second_player': callback.from_user.id}
+    
+    first_player_id = callback.data.split(',')[1]
+    
+    await callback.answer(text=LEXICON_RU['yes'], reply_markup=player_game_kb)
+    
+    user = users[callback.from_user.id]
     if not user['in_game']:
         AI_tiles = get_AI_tiles_for_shot()
         user['in_game'] = True
@@ -141,13 +186,5 @@ async def pair_AI_answer(message: Message):
         user['player_map'] = player_map()
         user['player_ships'] = {}
     else:
-        await message.answer(LEXICON_RU['choice_in_game'])
+        await callback.answer(LEXICON_RU['choice_in_game'])
 
-
-@router.message(lambda message: message.user_shared)
-async def send_invite(message: Message, bot: Bot):
-    await bot.send_message(message.user_shared.user_id, "test message")
-    print(
-        f"Request {message.user_shared.request_id}. "
-        f"User ID: {message.user_shared.user_id}"
-    )
