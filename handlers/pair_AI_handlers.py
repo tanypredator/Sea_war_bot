@@ -64,14 +64,12 @@ async def confirm_placement(callback: CallbackQuery):
         user['player_ships'] = {}
         user['tiles_left'] = 13
         user['player_map'], user['tiles'] = player_map_restore(user['player_map'], user['tiles'])
-#        user['tiles'] = player_map_restore(user['player_map'], user['tiles'])[1]
         await callback.message.edit_text(text=LEXICON_RU['ship_too_long'], reply_markup=player_game_kb)
 
     elif result == "diagonal placement":
         user['player_ships'] = {}
         user['tiles_left'] = 13
         user['player_map'], user['tiles'] = player_map_restore(user['player_map'], user['tiles'])
-#        user['tiles'] = player_map_restore(user['player_map'], user['tiles'])[1]
         await callback.message.edit_text(text=LEXICON_RU['diagonal_placement'],
                                          reply_markup=player_game_kb)
 
@@ -79,14 +77,11 @@ async def confirm_placement(callback: CallbackQuery):
         user['player_ships'] = {}
         user['tiles_left'] = 13
         user['player_map'], user['tiles'] = player_map_restore(user['player_map'], user['tiles'])
-#        user['tiles'] = player_map_restore(user['player_map'], user['tiles'])[1]
         await callback.message.edit_text(text=LEXICON_RU['wrong_placement'],
                                          reply_markup=player_game_kb)
 
     elif result == "placement confirmed":
         print(user['player_ships'])
-#        user['player_ships'] = placement_check[1]
-
         # replace confirmation button with the next move button and make tiles inactive:
         user['player_kb'] = confirm_player_kb(user['player_map'])
 
@@ -106,7 +101,7 @@ async def process_AI_pair_button(callback: CallbackQuery):
         coords = callback.data.split(',')
         coord_y = int(coords[1])
         coord_x = int(coords[2])
-    
+
         AI_map = user['AI_map']
         player_hits = user['player_hits']
 
@@ -114,25 +109,25 @@ async def process_AI_pair_button(callback: CallbackQuery):
         result = shot_result(AI_map[0], AI_map[1], player_hits, coord_x, coord_y)
 
         if result == 'killed':
-            user['AI_ships_left'] -= 1
-        if user['AI_ships_left'] == 0:
+            user['enemy_ships_left'] -= 1
+        if user['enemy_ships_left'] == 0:
             await callback.message.edit_text(
                 text=LEXICON_RU['user_won'],
-            reply_markup=None)
+                reply_markup=None)
             user['wins'] += 1
             user['in_game'] = False
             await callback.message.answer(text=LEXICON_RU['new_game'], reply_markup=game_mode_kb)
 
         else:
             user['enemy_kb'] = rebuild_keyboard_AI_pair(callback.message.reply_markup.inline_keyboard, coord_x, coord_y,
-                                                    result)
+                                                        result)
             await callback.message.edit_text(
-            text=LEXICON_RU[result], reply_markup=user['enemy_kb'])
+                text=LEXICON_RU[result], reply_markup=user['enemy_kb'])
         user['shot_status'] = 'already_shot'
     else:
         await callback.message.edit_text(
             text=LEXICON_RU['inactive_button'], reply_markup=callback.message.reply_markup)
-            
+
     await callback.answer()
 
 
@@ -151,12 +146,12 @@ async def go_to_AI_move(callback: CallbackQuery):
     user['AI_tiles_for_shot'] = AI_shot_result[3]
     user['AI_hits'] = AI_shot_result[4]
     user['player_kb'] = rebuild_player_keyboard_AI_pair(user['player_kb'].inline_keyboard,
-                                                            AI_x, AI_y, AI_result)
+                                                        AI_x, AI_y, AI_result)
     if AI_result == 'killed_player':
         user['player_ships_left'] -= 1
     if user['player_ships_left'] == 0:
         await callback.message.edit_text(
-                text=LEXICON_RU['user_failed'],
+            text=LEXICON_RU['user_failed'],
             reply_markup=None)
         user['in_game'] = False
         await callback.message.answer(text=LEXICON_RU['new_game'], reply_markup=game_mode_kb)
@@ -179,6 +174,6 @@ async def confirm_placement(callback: CallbackQuery):
 @router.callback_query(Text(text=['inactive,' + str(i) + ',' + str(j) for i in range(1, 9) for j in range(1, 9)]))
 async def note_inactive_button(callback: CallbackQuery):
     await callback.message.edit_text(
-            text=LEXICON_RU['inactive_button'], reply_markup=callback.message.reply_markup)
-            
+        text=LEXICON_RU['inactive_button'], reply_markup=callback.message.reply_markup)
+
     await callback.answer()
