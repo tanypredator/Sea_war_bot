@@ -69,5 +69,7 @@ HIT_BUTTON_SYMBOLS: dict[str, str] = {
     'dragon': '🐉',
     'boat': '⛵️',
     'island': '🏝',
-    'volcano': '🌋'
+    'volcano': '🌋',
+    'empty': '🌊',
+    'place': '🔲'
 }
