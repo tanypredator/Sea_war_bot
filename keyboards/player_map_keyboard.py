@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from lexicon.lexicon_ru import LEXICON_RU
+from lexicon.lexicon_ru import LEXICON_RU, HIT_BUTTON_SYMBOLS
 
 # ------- Создаем игровую клавиатуру без использования билдера -------
 
@@ -41,14 +41,9 @@ def player_keyboard_rebuild(old_board, x, y, status):
     keyboard = old_board
     x -= 1
     y -= 1
-    if status == "empty":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='🌊',
-            callback_data=f'{y+1},{x+1}')
-    elif status == "place":
-        keyboard[y][x] = InlineKeyboardButton(
-            text='🔲',
-            callback_data=f'{y+1},{x+1}')
+    keyboard[y][x] = InlineKeyboardButton(
+        text=HIT_BUTTON_SYMBOLS[status],
+        callback_data=f'{y + 1},{x + 1}')
     rebuilt_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=keyboard,
                                                                   resize_keyboard=True)
     return rebuilt_keyboard
@@ -80,13 +75,11 @@ def confirm_player_kb(player_map):
                 in_game_keyboard.append(in_game_buttons)
                 in_game_buttons = []
 
-    next_move_player_button = []
-    next_move_player_button.append(InlineKeyboardButton(
+    next_move_player_button = [InlineKeyboardButton(
         text=LEXICON_RU['next_move'],
-        callback_data='next_move_player'))
-    next_move_player_button.append(InlineKeyboardButton(
+        callback_data='next_move_player'), InlineKeyboardButton(
         text=LEXICON_RU['/cancel'],
-        callback_data='/cancel'))
+        callback_data='/cancel')]
     in_game_keyboard.append(next_move_player_button)
 
     in_game_player_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=in_game_keyboard,
