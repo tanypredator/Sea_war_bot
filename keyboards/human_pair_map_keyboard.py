@@ -4,42 +4,72 @@ from lexicon.lexicon_ru import LEXICON_RU, HIT_BUTTON_SYMBOLS
 
 # ------- Создаем игровую клавиатуру без использования билдера -------
 # Создаем объекты инлайн-кнопок
-buttons: list[InlineKeyboardButton] = []
-keyboard: list[list[InlineKeyboardButton]] = []
+first_player_buttons: list[InlineKeyboardButton] = []
+first_player_keyboard: list[list[InlineKeyboardButton]] = []
 
 for i in range(1, 9):
     for j in range(1, 9):
-        buttons.append(InlineKeyboardButton(
+        first_player_buttons.append(InlineKeyboardButton(
             text='🌊',
-            callback_data=f'{i},{j}'))
+            callback_data=f'first_player,{i},{j}'))
         if not j % 8:
-            keyboard.append(buttons)
-            buttons = []
+            first_player_keyboard.append(first_player_buttons)
+            first_player_buttons = []
 
-confirm_buttons = []
-confirm_buttons.append(InlineKeyboardButton(
+first_player_confirm_buttons = []
+first_player_confirm_buttons.append(InlineKeyboardButton(
     text=LEXICON_RU['confirm_placement'],
-    callback_data='confirm_placement'))
-confirm_buttons.append(InlineKeyboardButton(
+    callback_data='first_player_confirm_placement'))
+first_player_confirm_buttons.append(InlineKeyboardButton(
     text=LEXICON_RU['/cancel'],
     callback_data='/cancel'))
 
-keyboard.append(confirm_buttons)
+first_player_keyboard.append(first_player_confirm_buttons)
 
 # Создаем игровую клавиатуру с нумерованными кнопками как список списков
-player_game_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
-    inline_keyboard=keyboard,
+first_player_game_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
+    inline_keyboard=first_player_keyboard,
+    resize_keyboard=True)
+
+
+# ------- Создаем игровую клавиатуру без использования билдера -------
+# Создаем объекты инлайн-кнопок
+second_player_buttons: list[InlineKeyboardButton] = []
+second_player_keyboard: list[list[InlineKeyboardButton]] = []
+
+for i in range(1, 9):
+    for j in range(1, 9):
+        second_player_buttons.append(InlineKeyboardButton(
+            text='🌊',
+            callback_data=f'second_player,{i},{j}'))
+        if not j % 8:
+            second_player_keyboard.append(second_player_buttons)
+            second_player_buttons = []
+
+second_player_confirm_buttons = []
+second_player_confirm_buttons.append(InlineKeyboardButton(
+    text=LEXICON_RU['confirm_placement'],
+    callback_data='second_player_confirm_placement'))
+second_player_confirm_buttons.append(InlineKeyboardButton(
+    text=LEXICON_RU['/cancel'],
+    callback_data='/cancel'))
+
+second_player_keyboard.append(second_player_confirm_buttons)
+
+# Создаем игровую клавиатуру с нумерованными кнопками как список списков
+second_player_game_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(
+    inline_keyboard=second_player_keyboard,
     resize_keyboard=True)
 
 
 #  rebuild keyboard after ship deck placement
-def player_keyboard_rebuild(old_board, x, y, status):
+def human_pair_keyboard_rebuild(old_board, player, x, y, status):
     keyboard = old_board
     x -= 1
     y -= 1
     keyboard[y][x] = InlineKeyboardButton(
         text=HIT_BUTTON_SYMBOLS[status],
-        callback_data=f'{y + 1},{x + 1}')
+        callback_data=f'{player},{y + 1},{x + 1}')
     rebuilt_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=keyboard,
                                                                   resize_keyboard=True)
     return rebuilt_keyboard
