@@ -7,7 +7,8 @@ from aiogram import Bot
 from keyboards.keyboard import game_mode_kb
 
 from keyboards.player_map_keyboard import player_map_restore, confirm_player_kb
-from keyboards.human_pair_map_keyboard import human_pair_keyboard_rebuild, first_player_game_kb, second_player_game_kb
+from keyboards.human_pair_map_keyboard import human_pair_keyboard_rebuild, first_player_game_kb, second_player_game_kb, \
+    hide_enemy_kb, rebuild_enemy_keyboard_human_pair
 
 from keyboards.keyboard_AI_pair import rebuild_keyboard_AI_pair, rebuild_player_keyboard_AI_pair
 
@@ -19,8 +20,10 @@ router: Router = Router()
 
 
 # Этот хэндлер срабатывает на кнопки при размещении корабля
-@router.callback_query(Text(text=['first_player' + ',' + str(i) + ',' + str(j) for i in range(1, 9) for j in range(1, 9)]))
-@router.callback_query(Text(text=['second_player' + ',' + str(i) + ',' + str(j) for i in range(1, 9) for j in range(1, 9)]))
+@router.callback_query(
+    Text(text=['first_player' + ',' + str(i) + ',' + str(j) for i in range(1, 9) for j in range(1, 9)]))
+@router.callback_query(
+    Text(text=['second_player' + ',' + str(i) + ',' + str(j) for i in range(1, 9) for j in range(1, 9)]))
 async def process_game_button(callback: CallbackQuery):
     coords = callback.data.split(',')
     player = coords[0]
@@ -90,8 +93,10 @@ async def confirm_placement(callback: CallbackQuery, bot: Bot):
         user['player_kb'] = confirm_player_kb(user['player_map'])
 
         second_player_id = game_pairs[callback.from_user.id]['second_player']
-        users[second_player_id]['enemy_kb'] = user['player_kb']
-        await callback.answer(text=LEXICON_RU['wait_for_enemy'])
+        users[second_player_id]['enemy_kb'] = hide_enemy_kb(user['player_map'], 'first_player')
+        users[second_player_id]['enemy_map'] = user['player_map']
+        users[second_player_id]['enemy_ships'] = user['player_ships']
+        await callback.answer(text=LEXICON_RU['wait_for_enemy'], reply_markup=user['player_kb'])
         enemy_confirmed = f"{LEXICON_RU['first_player_placed_ships']}"
         await bot.send_message(second_player_id, enemy_confirmed, reply_markup=second_player_game_kb)
 
@@ -137,42 +142,71 @@ async def confirm_placement(callback: CallbackQuery, bot: Bot):
             if game_pairs[first_user]['second_player'] == callback.from_user.id:
                 first_player_id = first_user
 
-        users[first_player_id]['enemy_kb'] = user['player_kb']
-        await callback.answer(text=LEXICON_RU['wait_for_enemy'])
+        users[first_player_id]['enemy_kb'] = hide_enemy_kb(user['player_map'], 'second_player')
+        users[first_player_id]['enemy_map'] = user['player_map']
+        users[first_player_id]['enemy_ships'] = user['player_ships']
+        await callback.answer(text=LEXICON_RU['wait_for_enemy'], reply_markup=user['player_kb'])
         enemy_confirmed = f"{LEXICON_RU['placement_confirmed']}"
-        await bot.send_message(first_player_id, enemy_confirmed, reply_markup=second_player_game_kb)
+        await bot.send_message(first_player_id, enemy_confirmed, reply_markup=users[first_player_id]['enemy_kb'])
 
     await callback.answer()
 
 
-# Этот хэндлер срабатывает на кнопки стрельбы по карте компьютерного игрока
-@router.callback_query(Text(text=['AI_pair,' + str(i) + ',' + str(j) for i in range(1, 9) for j in range(1, 9)]))
-async def process_AI_pair_button(callback: CallbackQuery):
+# Этот хэндлер срабатывает на кнопки стрельбы по карте другого игрока
+@router.callback_query(
+    Text(text=['in-game,' + 'first_player' + ',' + str(i) + ',' + str(j) for i in range(1, 9) for j in range(1, 9)]))
+@router.callback_query(
+    Text(text=['in-game,' + 'second_player' + ',' + str(i) + ',' + str(j) for i in range(1, 9) for j in range(1, 9)]))
+async def process_human_pair_button(callback: CallbackQuery, bot: Bot):
     user = users[callback.from_user.id]
     if user['shot_status'] == 'not_shot_yet':
         coords = callback.data.split(',')
-        coord_y = int(coords[1])
-        coord_x = int(coords[2])
+        enemy_order = coords[1]
+        coord_y = int(coords[2])
+        coord_x = int(coords[3])
 
-        AI_map = user['AI_map']
+        enemy_map = user['enemy_map']
+        enemy_ships = user['enemy_ships']
         player_hits = user['player_hits']
 
+        enemy_id = ''
+        if enemy_order == 'first_player':
+            for first_user in game_pairs:
+                if game_pairs[first_user]['second_player'] == callback.from_user.id:
+                    enemy_id = first_user
+        elif enemy_order == 'second_player':
+            enemy_id = game_pairs[callback.from_user.id]['second_player']
+
+        enemy = users[enemy_id]
+
+        print('user:', callback.from_user.first_name, callback.from_user.id)
+        print('enemy:', enemy_order, enemy_id)
+        print('enemy_map', enemy_map)
+        print("enemy_ships", enemy_ships)
+        print("player_hits", player_hits)
+        print('coord_x', coord_x)
+        print('coord_y', coord_y)
+
         # check the result of player shot:
-        result = shot_result(AI_map[0], AI_map[1], player_hits, coord_x, coord_y)
+        result = shot_result(enemy_map, enemy_ships, player_hits, coord_x, coord_y)
 
         if result == 'killed':
             user['enemy_ships_left'] -= 1
+            enemy['player_ships_left'] -= 1
         if user['enemy_ships_left'] == 0:
             await callback.message.edit_text(
                 text=LEXICON_RU['user_won'],
                 reply_markup=None)
+            await bot.send_message(enemy_id, LEXICON_RU['user_failed'])
             user['wins'] += 1
             user['in_game'] = False
+            enemy['in_game'] = False
             await callback.message.answer(text=LEXICON_RU['new_game'], reply_markup=game_mode_kb)
+            await bot.send_message(enemy_id, LEXICON_RU['new_game'], reply_markup=game_mode_kb)
 
         else:
-            user['enemy_kb'] = rebuild_keyboard_AI_pair(callback.message.reply_markup.inline_keyboard, coord_x, coord_y,
-                                                        result)
+            user['enemy_kb'] = rebuild_enemy_keyboard_human_pair(callback.message.reply_markup.inline_keyboard,
+                                                                 enemy_order, coord_x, coord_y, result)
             await callback.message.edit_text(
                 text=LEXICON_RU[result], reply_markup=user['enemy_kb'])
         user['shot_status'] = 'already_shot'

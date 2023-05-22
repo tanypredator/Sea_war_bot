@@ -26,6 +26,8 @@ async def process_start_command(message: Message):
                                        'shot_status': None,
                                        'AI_map': None,
                                        'player_map': None,
+                                       'enemy_map': None,
+                                       'enemy_ships': None,
                                        'attempts': None,
                                        'enemy_ships_left': None,
                                        'player_hits': None,
@@ -132,7 +134,6 @@ async def pair_AI_answer(message: Message):
         user['in_game'] = True
         user['shot_status'] = 'not_shot_yet'
         user['total_games'] += 1
-        user['AI_map'] = create_AI_map()
         user['player_hits'] = []
         user['tiles'] = []
         user['tiles_left'] = TILES_LEFT
@@ -156,7 +157,7 @@ async def send_invite(message: Message, bot: Bot):
         invitation_kb = make_invitation_kb(message.from_user.id)
         await bot.send_message(message.user_shared.user_id, invitation, reply_markup=invitation_kb)
     print(
-        f"Request {message.user_shared.request_id}. "
+        f"Request {message.user_shared.request_id}."
         f"User ID: {message.user_shared.user_id}"
     )
 
@@ -172,7 +173,6 @@ async def confirm_invitation(callback: CallbackQuery, bot: Bot):
         user['in_game'] = True
         user['shot_status'] = 'not_shot_yet'
         user['total_games'] += 1
-        user['AI_map'] = create_AI_map()
         user['player_hits'] = []
         user['tiles'] = []
         user['AI_hits'] = []

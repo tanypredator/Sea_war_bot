@@ -110,3 +110,45 @@ def confirm_player_kb(player_map):
     in_game_player_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=in_game_keyboard,
                                                                    resize_keyboard=True)
     return in_game_player_kb
+
+
+def hide_enemy_kb(enemy_map, player):
+    hidden_buttons: list[InlineKeyboardButton] = []
+    hidden_keyboard: list[list[InlineKeyboardButton]] = []
+    for y in range(1, 9):
+        for x in range(1, 9):
+            if enemy_map[y][x] == 1:
+                hidden_buttons.append(InlineKeyboardButton(
+                    text='*',
+                    callback_data=f'in-game,{player},{y},{x}'))
+            else:
+                hidden_buttons.append(InlineKeyboardButton(
+                    text='*',
+                    callback_data=f'in-game,{player},{y},{x}'))
+            if not x % 8:
+                hidden_keyboard.append(hidden_buttons)
+                hidden_buttons = []
+
+    next_move_player_button = [InlineKeyboardButton(
+        text=LEXICON_RU['next_move'],
+        callback_data=f'next_move,{player}'), InlineKeyboardButton(
+        text=LEXICON_RU['/cancel'],
+        callback_data='/cancel')]
+    hidden_keyboard.append(next_move_player_button)
+    hidden_enemy_kb: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=hidden_keyboard,
+                                                                   resize_keyboard=True)
+    return hidden_enemy_kb
+
+
+def rebuild_enemy_keyboard_human_pair(old_board, enemy, x, y, status):
+    keyboard = old_board
+    # because keyboard indices are from 0...
+    x -= 1
+    y -= 1
+    coords = f'in-game,{enemy},{x+1},{y+1}'
+    keyboard[y][x] = InlineKeyboardButton(
+        text=HIT_BUTTON_SYMBOLS[status],
+        callback_data=coords)
+    rebuilt_keyboard: InlineKeyboardMarkup = InlineKeyboardMarkup(inline_keyboard=keyboard,
+                                                                  resize_keyboard=True)
+    return rebuilt_keyboard
